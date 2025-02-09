@@ -21,6 +21,7 @@ jobs:
         run: |
           # 删除特定行并保存到目标文件
           sed '/server=\/cn\/114.114.114.114/d' temp_domains.conf > accelerated-domains.china.conf
+          sed '/server=\/top\/114.114.114.114/d' temp_domains.conf > accelerated-domains.china.conf
           rm temp_domains.conf
           
       - name: Check for changes
