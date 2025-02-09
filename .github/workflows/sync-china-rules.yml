@@ -1,4 +1,4 @@
-name: Sync DNS Rules
+name: Sync China Rules
 
 on:
   schedule:
