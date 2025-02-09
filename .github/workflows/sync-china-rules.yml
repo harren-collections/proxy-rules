@@ -1,0 +1,44 @@
+name: Sync DNS Rules
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 0:00 运行
+  workflow_dispatch:      # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download upstream file
+        run: |
+          curl -o temp_domains.conf https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf
+          
+      - name: Process file
+        run: |
+          # 删除特定行并保存到目标文件
+          sed '/server=\/cn\/114.114.114.114/d' temp_domains.conf > accelerated-domains.china.conf
+          rm temp_domains.conf
+          
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet accelerated-domains.china.conf; then
+            echo "No changes detected"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Commit and push if changes exist
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add accelerated-domains.china.conf
+          git commit -m "chore: sync DNS rules from upstream"
+          git push
